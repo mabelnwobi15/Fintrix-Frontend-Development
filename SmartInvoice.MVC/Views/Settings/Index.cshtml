@@ -1,0 +1,298 @@
+﻿@{
+    ViewData["Title"] = "Settings";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    /* General body theme */
+    body {
+        font-family: 'Raleway', sans-serif;
+        background: linear-gradient(135deg, #f0f3f8, #d9e2f0);
+        min-height: 100vh;
+        color: #2c3e50;
+    }
+
+    h2 {
+        font-weight: 700;
+        color: #1f2a38;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    /* Card styling - NO BORDERS */
+    .card {
+        border: none !important;
+        border-radius: 15px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        background: #ffffff;
+        transition: transform 0.3s, box-shadow 0.3s;
+        margin-bottom: 1.5rem;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+        }
+
+    .card-header {
+        background: linear-gradient(90deg, #4e73df, #1cc88a);
+        color: white;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        border: none !important;
+    }
+
+    .card-body {
+        border: none !important;
+    }
+
+        .card-body p {
+            font-size: 1rem;
+            margin-bottom: 0.8rem;
+            padding: 0.3rem 0;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .card-body span {
+            font-weight: 500;
+            color: #34495e;
+        }
+
+    /* Map styling - NO BORDERS */
+    #locationMap {
+        height: 350px;
+        width: 100%;
+        border-radius: 12px;
+        margin-top: 10px;
+        z-index: 1;
+        border: none !important;
+        outline: none !important;
+    }
+
+    .map-container {
+        position: relative;
+    }
+
+    .coordinates-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 8px;
+        text-align: center;
+    }
+
+    /* Responsive container */
+    .container {
+        max-width: 700px;
+    }
+
+    .btn-refresh {
+        background: linear-gradient(90deg, #4e73df, #1cc88a);
+        border: none;
+        color: white;
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin-top: 10px;
+        transition: 0.2s;
+    }
+
+        .btn-refresh:hover {
+            transform: scale(1.02);
+            opacity: 0.9;
+        }
+</style>
+
+<div class="container py-5">
+    <h2>Settings</h2>
+
+    <!-- Time & Date Card -->
+    <div class="card shadow-sm">
+        <div class="card-header">
+            Date & Time
+        </div>
+        <div class="card-body">
+            <p><strong>Current Time:</strong> <span id="currentTime">Loading...</span></p>
+            <p><strong>Current Date:</strong> <span id="currentDate">Loading...</span></p>
+        </div>
+    </div>
+
+    <!-- Live Map Card -->
+    <div class="card shadow-sm">
+        <div class="card-header">
+            My Location Map
+        </div>
+        <div class="card-body">
+            <div class="map-container">
+                <div id="locationMap"></div>
+                <div class="coordinates-text" id="mapCoordinates">
+                    Fetching your location... (allow location access)
+                </div>
+                <div class="text-center">
+                    <button class="btn-refresh" onclick="refreshMapLocation()"> Refresh Map Location</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let mapInstance = null;
+    let currentMarker = null;
+    let currentLat = null;
+    let currentLng = null;
+
+    // Initialize map with default view (world view)
+    function initMap(lat, lng, zoomLevel = 13) {
+        if (mapInstance === null) {
+            // Create new map
+            mapInstance = L.map('locationMap').setView([lat, lng], zoomLevel);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CartoDB',
+                subdomains: 'abcd',
+                maxZoom: 19,
+                minZoom: 3
+            }).addTo(mapInstance);
+        } else {
+            // Update existing map view
+            mapInstance.setView([lat, lng], zoomLevel);
+        }
+
+        // Remove old marker if exists
+        if (currentMarker) {
+            mapInstance.removeLayer(currentMarker);
+        }
+
+        // Add new marker with popup
+        currentMarker = L.marker([lat, lng]).addTo(mapInstance);
+        currentMarker.bindPopup(`<b>You are here</b><br>Lat: ${lat.toFixed(4)}<br>Lng: ${lng.toFixed(4)}`).openPopup();
+
+        // Optionally add a nice circle for accuracy
+        if (currentLat && currentLng) {
+            // remove old circle if any
+            if (window.accuracyCircle) {
+                mapInstance.removeLayer(window.accuracyCircle);
+            }
+            // Add subtle radius circle (optional)
+            window.accuracyCircle = L.circle([lat, lng], {
+                color: '#4e73df',
+                fillColor: '#1cc88a',
+                fillOpacity: 0.15,
+                radius: 50
+            }).addTo(mapInstance);
+        }
+    }
+
+    // Update UI with coordinates and refresh map
+    function updateMapWithLocation(position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        currentLat = lat;
+        currentLng = lng;
+
+        // Show readable coordinates in text
+        const coordElement = document.getElementById('mapCoordinates');
+        coordElement.innerHTML = ` <strong>Your position:</strong> Latitude ${lat.toFixed(5)}, Longitude ${lng.toFixed(5)} &nbsp;|&nbsp; 🗺️ Map centered on your location`;
+
+        // Initialize or update map
+        if (mapInstance === null) {
+            initMap(lat, lng, 14);
+        } else {
+            mapInstance.setView([lat, lng], 14);
+            if (currentMarker) {
+                mapInstance.removeLayer(currentMarker);
+            }
+            currentMarker = L.marker([lat, lng]).addTo(mapInstance);
+            currentMarker.bindPopup(`<b>Your location</b><br>Lat: ${lat.toFixed(5)}<br>Lng: ${lng.toFixed(5)}`).openPopup();
+
+            // Update accuracy circle
+            if (window.accuracyCircle) {
+                mapInstance.removeLayer(window.accuracyCircle);
+            }
+            window.accuracyCircle = L.circle([lat, lng], {
+                color: '#4e73df',
+                fillColor: '#1cc88a',
+                fillOpacity: 0.15,
+                radius: position.coords.accuracy || 50
+            }).addTo(mapInstance);
+        }
+    }
+
+    // Handle geolocation errors gracefully
+    function handleLocationError(error) {
+        let errorMessage = '';
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                errorMessage = '❌ Location access denied. Please allow location in your browser settings.';
+                break;
+            case error.POSITION_UNAVAILABLE:
+                errorMessage = '⚠️ Location information unavailable.';
+                break;
+            case error.TIMEOUT:
+                errorMessage = '⏰ Location request timed out.';
+                break;
+            default:
+                errorMessage = '❓ An unknown error occurred.';
+                break;
+        }
+        document.getElementById('mapCoordinates').innerHTML = `🌐 ${errorMessage} Showing default map (San Francisco).`;
+        // Fallback map view (show default nice location)
+        if (mapInstance === null) {
+            initMap(37.7749, -122.4194, 12);
+        } else {
+            mapInstance.setView([37.7749, -122.4194], 12);
+            if (currentMarker) mapInstance.removeLayer(currentMarker);
+            currentMarker = L.marker([37.7749, -122.4194]).addTo(mapInstance);
+            currentMarker.bindPopup(' Demo location<br>Enable geolocation for your real position').openPopup();
+        }
+    }
+
+    // Main function to get user location and show map
+    function getAndShowLocation() {
+        if (navigator.geolocation) {
+            // Show loading state
+            document.getElementById('mapCoordinates').innerHTML = ' Fetching your location, please wait... (ensure location is enabled)';
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    updateMapWithLocation(position);
+                },
+                (error) => {
+                    handleLocationError(error);
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        } else {
+            document.getElementById('mapCoordinates').innerHTML = '⚠️ Geolocation is not supported by this browser.';
+            if (mapInstance === null) {
+                initMap(37.7749, -122.4194, 5);
+            }
+        }
+    }
+
+    // Refresh button function
+    function refreshMapLocation() {
+        getAndShowLocation();
+    }
+
+    // Update date and time (live)
+    function updateDateTime() {
+        const now = new Date();
+        document.getElementById('currentTime').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        document.getElementById('currentDate').innerText = now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    // Initial load: start clock, init map placeholder (will be replaced after location)
+    window.addEventListener('load', () => {
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+
+        // Small delay to allow DOM fully ready, then request location
+        setTimeout(() => {
+            getAndShowLocation();
+        }, 200);
+    });
+</script>

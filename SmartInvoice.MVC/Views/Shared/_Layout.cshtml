@@ -1,0 +1,708 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Fintrix</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/SmartInvoice.MVC.styles.css" asp-append-version="true" />
+    <!-- Font Awesome 6 (Free) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Professional navbar - pure black background */
+        .navbar {
+            background: #000000 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+            padding: 0.75rem 2rem;
+            transition: all 0.2s ease;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 1.4rem;
+            letter-spacing: -0.3px;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 0;
+        }
+
+            .navbar-brand img {
+                height: 36px;
+                width: auto;
+                border-radius: 8px;
+            }
+
+        .navbar-collapse {
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        .navbar-nav {
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .nav-item {
+            list-style: none;
+        }
+
+        .nav-link {
+            color: #ffffff !important;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+            .nav-link:hover {
+                background-color: #1f2937;
+                color: #3b82f6 !important;
+            }
+
+            .nav-link.active,
+            .nav-item.active .nav-link,
+            .nav-link[aria-current="page"] {
+                background: #2a2a2a !important;
+                border: 1px solid #3b82f6 !important;
+                color: #3b82f6 !important;
+                font-weight: 500;
+            }
+
+        .navbar-nav .nav-link.active {
+            background: #2a2a2a !important;
+            border: 1px solid #3b82f6 !important;
+            color: #3b82f6 !important;
+        }
+
+        /* NEW USER INFO AREA - Replaces avatar with text details */
+        .user-info-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: #1a1a1a;
+            padding: 0.5rem 1.2rem 0.5rem 1.5rem;
+            border-radius: 60px;
+            border: 1px solid #333333;
+            transition: all 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+
+            .user-info-card:hover {
+                background: #2a2a2a;
+                border-color: #3b82f6;
+            }
+
+        .user-text-details {
+            text-align: right;
+            line-height: 1.4;
+        }
+
+        .user-name-display {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #ffffff !important;
+            letter-spacing: -0.2px;
+        }
+
+        .user-email-display {
+            font-size: 0.7rem;
+            color: #9ca3af !important;
+            font-weight: 450;
+        }
+
+        /* Guest mode styling */
+        .user-info-card.guest-mode {
+            background: transparent;
+            border-color: #4b5563;
+        }
+
+            .user-info-card.guest-mode .user-name-display {
+                color: #d1d5db !important;
+            }
+
+            .user-info-card.guest-mode .user-email-display {
+                color: #6b7280 !important;
+            }
+
+        /* Simple icon instead of avatar */
+        .user-icon {
+            font-size: 1.8rem;
+            color: #3b82f6;
+            transition: transform 0.2s;
+        }
+
+        .user-info-card:hover .user-icon {
+            transform: scale(1.05);
+        }
+
+        /* Hover tooltip card for more details */
+        .user-hover-card {
+            position: absolute;
+            top: 65px;
+            right: 0;
+            background: #1e1e2f;
+            border-radius: 16px;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.4);
+            min-width: 260px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+            transform: translateY(-8px);
+            pointer-events: none;
+            border: 1px solid #333;
+            backdrop-filter: blur(4px);
+        }
+
+        .user-info-card:hover .user-hover-card {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .hover-card-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid #2d2d3a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hover-avatar-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            color: white;
+        }
+
+        .hover-user-info h4 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .hover-user-info p {
+            margin: 4px 0 0;
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .hover-card-body {
+            padding: 12px 18px;
+        }
+
+        .hover-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            color: #e2e8f0;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #2a2a3a;
+        }
+
+            .hover-detail-item:last-child {
+                border-bottom: none;
+            }
+
+            .hover-detail-item i {
+                width: 20px;
+                color: #3b82f6;
+            }
+
+        .logout-hover-btn {
+            margin-top: 8px;
+            padding: 10px;
+            background: #7f1d1d20;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #f87171;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+            .logout-hover-btn:hover {
+                background: #7f1d1d;
+                color: white;
+            }
+
+        /* Logout button arrow */
+        .logout-arrow-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: #9ca3af !important;
+            font-size: 1.2rem;
+            padding: 8px 8px 8px 6px;
+            margin-left: 8px;
+            border-radius: 40px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+            .logout-arrow-btn:hover {
+                background-color: #7f1d1d;
+                color: #ef4444 !important;
+            }
+
+                .logout-arrow-btn:hover i {
+                    color: #ef4444;
+                    transform: translateX(2px);
+                }
+
+        .separator-line {
+            width: 1px;
+            height: 32px;
+            background-color: #4b5563;
+            margin: 0 4px;
+        }
+
+        @@media (max-width: 992px) {
+            .navbar {
+                padding: 0.75rem 1rem;
+            }
+
+            .navbar-nav {
+                margin-top: 1rem;
+            }
+
+            .user-info-card {
+                margin-top: 0.5rem;
+            }
+
+            .user-hover-card {
+                right: -20px;
+            }
+        }
+
+        .container-fluid {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        main {
+            animation: fadeIn 0.25s ease;
+        }
+
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .content-placeholder {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .logout-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            z-index: 1100;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+    </style>
+
+    @inject IHttpContextAccessor HttpContextAccessor
+    @inject IHttpClientFactory HttpClientFactory
+
+    @{
+        // Default guest values
+        string userName = "Guest User";
+        string userEmail = "Not signed in";
+
+        var token = HttpContextAccessor.HttpContext.Session.GetString("JWToken");
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            try
+            {
+                var client = HttpClientFactory.CreateClient();
+                client.BaseAddress = new Uri("http://localhost:5054/");
+                client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = client.GetAsync("api/auth/me").Result;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var user = response.Content.ReadFromJsonAsync<dynamic>().Result;
+                    userName = user.name ?? user.Name ?? "User";
+                    userEmail = user.email ?? user.Email ?? "user@example.com";
+                }
+            }
+            catch
+            {
+                userName = "Guest User";
+                userEmail = "Not signed in";
+            }
+        }
+    }
+
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-black">
+            <div class="container-fluid px-4 px-xl-5">
+                <!-- Brand -->
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="~/image/logo.png" alt="Fintrix" onerror="this.src='https://placehold.co/36x36?text=F'">
+                    <span>Fintrix</span>
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                        aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Centered Navigation -->
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="fas fa-chart-line"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">
+                                <i class="fas fa-lightbulb"></i> About
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Client" asp-action="Index">
+                                <i class="fas fa-user-friends"></i> Customers
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Invoice" asp-action="Index">
+                                <i class="fas fa-file-invoice"></i> Invoices
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Payment" asp-action="Index">
+                                <i class="fas fa-credit-card"></i> Payments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Settings" asp-action="Index">
+                                <i class="fas fa-sliders-h"></i> Settings
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- User Area: Replaced avatar circle with name+email, hover shows extra details -->
+                <div class="d-flex align-items-center">
+                    
+
+                    <div class="separator-line"></div>
+
+                    <!-- Logout Arrow Button (alternative quick logout) -->
+                    <a href="#" class="logout-arrow-btn" id="logoutArrowBtn" title="Sign out">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container mt-4 pt-2">
+        <main role="main" class="pb-4">
+            <div class="content-placeholder">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <div id="logoutToast" class="logout-toast">
+        <i class="fas fa-check-circle me-2" style="color: #10b981;"></i> Logging you out...
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        // API configuration
+        const API_BASE = "http://localhost:5054/api";
+
+        function getToken() {
+            return localStorage.getItem("token");
+        }
+
+        function setToken(token) {
+            if (token) {
+                localStorage.setItem("token", token);
+            } else {
+                localStorage.removeItem("token");
+            }
+        }
+
+        function isAuthenticated() {
+            return !!getToken();
+        }
+
+        // Update UI with user details (name and email prominently displayed)
+        function updateUserInterface(userData) {
+            const userNameSpan = document.getElementById("userNameDisplay");
+            const userEmailSpan = document.getElementById("userEmailDisplay");
+            const hoverUserName = document.getElementById("hoverUserName");
+            const hoverUserEmail = document.getElementById("hoverUserEmail");
+            const hoverAvatarIconDiv = document.getElementById("hoverAvatarIcon");
+            const userCard = document.getElementById("userInfoCard");
+
+            if (userData && userData.name && userData.email) {
+                // Logged in state
+                if (userNameSpan) userNameSpan.innerText = userData.name;
+                if (userEmailSpan) userEmailSpan.innerText = userData.email;
+                if (hoverUserName) hoverUserName.innerText = userData.name;
+                if (hoverUserEmail) hoverUserEmail.innerText = userData.email;
+                if (hoverAvatarIconDiv) {
+                    // Show first letter or icon
+                    const initial = userData.name.charAt(0).toUpperCase();
+                    hoverAvatarIconDiv.innerHTML = `<span style="font-size:1.5rem; font-weight:600;">${initial}</span>`;
+                }
+                if (userCard) {
+                    userCard.classList.remove("guest-mode");
+                }
+            } else {
+                // Guest / Not logged in
+                if (userNameSpan) userNameSpan.innerText = "Guest User";
+                if (userEmailSpan) userEmailSpan.innerText = "Sign in to continue";
+                if (hoverUserName) hoverUserName.innerText = "Not Authenticated";
+                if (hoverUserEmail) hoverUserEmail.innerText = "Please login";
+                if (hoverAvatarIconDiv) {
+                    hoverAvatarIconDiv.innerHTML = `<i class="fas fa-user-friends"></i>`;
+                }
+                if (userCard) {
+                    userCard.classList.add("guest-mode");
+                }
+            }
+        }
+
+        // Fetch current user from backend
+        async function fetchAndUpdateUser() {
+            const token = getToken();
+            if (!token) {
+                updateUserInterface(null);
+                return null;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    const userData = {
+                        name: user.name || user.Name || "User",
+                        email: user.email || user.Email || "user@example.com"
+                    };
+                    updateUserInterface(userData);
+                    return userData;
+                } else if (response.status === 401) {
+                    setToken(null);
+                    updateUserInterface(null);
+                    return null;
+                } else {
+                    console.error("Failed to fetch user");
+                    updateUserInterface(null);
+                    return null;
+                }
+            } catch (err) {
+                console.error("Error fetching user:", err);
+                updateUserInterface(null);
+                return null;
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('logoutToast');
+            if (toast) {
+                toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'} me-2" style="color: ${isError ? '#f97316' : '#10b981'};"></i> ${message}`;
+                toast.style.opacity = '1';
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    setTimeout(() => {
+                        toast.innerHTML = `<i class="fas fa-check-circle me-2" style="color: #10b981;"></i> Logging you out...`;
+                    }, 500);
+                }, 2000);
+            }
+        }
+
+        // Perform logout
+        async function performLogout() {
+            showToast("Signing out...");
+            // Clear token
+            setToken(null);
+            updateUserInterface(null);
+
+            // Optional: Call backend logout if needed (but JWT is stateless, just clear client)
+            setTimeout(() => {
+                // Redirect to login page (adjust as per your routing)
+                window.location.href = '/Account/Login';
+            }, 400);
+        }
+
+        // Login function (exposed globally)
+        window.login = async function(email, password) {
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.token) {
+                    setToken(data.token);
+                    await fetchAndUpdateUser();
+                    showToast("Login successful! Welcome back.", false);
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 600);
+                    return { success: true };
+                } else {
+                    const errorMsg = data.message || "Invalid email or password";
+                    showToast(errorMsg, true);
+                    return { success: false, message: errorMsg };
+                }
+            } catch (err) {
+                console.error("Login error:", err);
+                showToast("Connection error. Please try again.", true);
+                return { success: false, message: err.message };
+            }
+        };
+
+        // Active link highlighter
+        function highlightActiveLink() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                const linkPath = link.getAttribute('href');
+                if (linkPath && linkPath !== '#' && linkPath !== '') {
+                    if (currentPath === linkPath ||
+                        (linkPath === '/' && currentPath === '/') ||
+                        (linkPath !== '/' && currentPath.startsWith(linkPath))) {
+                        link.style.backgroundColor = '#2a2a2a';
+                        link.style.border = '1px solid #3b82f6';
+                        link.style.color = '#3b82f6';
+                        const icon = link.querySelector('i');
+                        if (icon) icon.style.color = '#3b82f6';
+                    }
+                }
+            });
+        }
+
+        // Event Listeners and initialization
+        document.addEventListener('DOMContentLoaded', async () => {
+            await fetchAndUpdateUser();
+            highlightActiveLink();
+
+            // Hover card logout button
+            const hoverLogoutBtn = document.getElementById("hoverLogoutBtn");
+            if (hoverLogoutBtn) {
+                hoverLogoutBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    performLogout();
+                });
+            }
+
+            // Arrow logout button
+            const logoutArrow = document.getElementById("logoutArrowBtn");
+            if (logoutArrow) {
+                logoutArrow.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    performLogout();
+                });
+            }
+
+            // Optional: Click on user card redirects to profile (if needed)
+            const userCard = document.getElementById("userInfoCard");
+            if (userCard) {
+                userCard.addEventListener("click", (e) => {
+                    // Only redirect if authenticated and not clicking on hover card logout area
+                    if (isAuthenticated() && !e.target.closest('.logout-hover-btn')) {
+                        window.location.href = '/Account/Profile';
+                    } else if (!isAuthenticated()) {
+                        window.location.href = '/Account/Login';
+                    }
+                });
+            }
+
+            // Prevent hover card from closing immediately when clicking inside
+            const hoverCard = document.getElementById("hoverCard");
+            if (hoverCard) {
+                hoverCard.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                });
+            }
+        });
+
+        // Expose refresh function for external calls (after login from other components)
+        window.refreshNavbarUser = async function() {
+            await fetchAndUpdateUser();
+        };
+
+        // Listen to storage events (multi-tab sync)
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'token') {
+                fetchAndUpdateUser();
+            }
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

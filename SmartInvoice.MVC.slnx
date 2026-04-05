@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Project Path="SmartInvoice.MVC/SmartInvoice.MVC.csproj" />
+</Solution>
