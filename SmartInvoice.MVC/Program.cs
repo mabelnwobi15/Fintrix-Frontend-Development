@@ -3,6 +3,17 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy", policy =>
+    {
+        policy
+            .WithOrigins("https://fintrix-frontend.onrender.com")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 // Add session support (JWT storage)
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -50,6 +61,7 @@ app.UseRouting();
 app.UseSession();       // <-- session must come before authorization
 app.UseAuthorization(); // keep authorization middleware
 
+app.UseCors("FrontendPolicy");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}"
