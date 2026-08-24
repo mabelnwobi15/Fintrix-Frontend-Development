@@ -61,7 +61,6 @@ app.UseRouting();
 app.UseSession();       // <-- session must come before authorization
 app.UseAuthorization(); // keep authorization middleware
 
-app.UseCors("FrontendPolicy");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}"
